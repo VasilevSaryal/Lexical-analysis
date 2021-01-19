@@ -34,8 +34,12 @@ namespace Lab3
         static char GetInputChar()
         {
             char c = CharList.FirstOrDefault();
-            CharList.RemoveAt(0);
-            return c;
+            if (CharList.Count > 0)
+            {
+                CharList.RemoveAt(0);
+                return c;
+            }
+            return '\ud801';
         }
 
         //возвращает символ с во входной поток
@@ -140,6 +144,7 @@ namespace Lab3
         // в остальных случаях –
         // номер распозанной лексемы
         // и в Type – ее тип
+        private static bool quotesOne = true; //костыль два или одна ковычка в st
         static int StepLexAnalize(ref int Type)
         {
             char c; //очередная литера
@@ -153,10 +158,6 @@ namespace Lab3
             // Остаток входного потока – еще не считанная цепочка.
             do {
                 c = GetInputChar();
-                Console.WriteLine();
-                Console.Write("Char: ");
-                Console.Write(c);
-                Console.WriteLine();
                 switch (T) {
                     case State.S:
                         if ((c == ' ') || (c =='\t') || (c =='\r') || (c =='\n'))
@@ -166,8 +167,9 @@ namespace Lab3
                             T = State.cm;
                             break; 
                         }
-                        if (c =='\'')
+                        if (c =='\'' || c == '\"')
                         {
+                            quotesOne = (c == '\'');
                             T = State.st;
                             break;
                         }
@@ -220,7 +222,9 @@ namespace Lab3
                         RevLit(c);
                         return Buf_Num(ref Type);
                     case State.st:
-                        if (c == '\'')
+                        if (c == '\ud801')
+                            return -1;
+                        if (c == '\'' && quotesOne || c == '\"' && !quotesOne)
                             T = State.dp;
                         else
                             PutInBuf(c);
